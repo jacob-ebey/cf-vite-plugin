@@ -1,4 +1,18 @@
+import { Hono } from "hono";
+
 import { Env } from "./env.js";
+
+const app = new Hono<{ Bindings: Env & { state: DurableObjectState } }>()
+  .get("/value", async ({ env: { COUNTER_KV }, json }) => {
+    const value = (await COUNTER_KV.get<number>("value", "json")) || 0;
+    return json(value);
+  })
+  .post("/increment", async ({ env: { COUNTER_KV }, json }) => {
+    const value = (await COUNTER_KV.get<number>("value", "json")) || 0;
+    const newValue = value + 1;
+    await COUNTER_KV.put("value", newValue.toString());
+    return json(newValue);
+  });
 
 export class Counter implements DurableObject {
   #env: Env;
@@ -10,29 +24,11 @@ export class Counter implements DurableObject {
   }
 
   async fetch(request: Request) {
-    const url = new URL(request.url);
-    switch (`${request.method} ${url.pathname}`) {
-      case "GET /value":
-        return new Response(String(await this.#getCounterValue()));
-      case "GET /increment":
-      case "POST /increment":
-        return new Response(String(await this.#increment()));
-      default:
-        return new Response("Not found", { status: 404 });
-    }
-  }
-
-  async #getCounterValue() {
-    const value =
-      (await this.#env.COUNTER_KV.get<number>("value", "json")) || 0;
-    return value;
-  }
-
-  async #increment(amount = 1) {
-    let value = (await this.#env.COUNTER_KV.get<number>("value", "json")) || 0;
-    value += amount;
-    await this.#env.COUNTER_KV.put("value", String(value));
-    // await this.#state.storage.put("value", value);
-    return value;
+    return app.fetch(request, {
+      ...this.#env,
+      state: this.#state,
+    });
   }
 }
+
+export type CounterAPI = typeof app;
