@@ -25,10 +25,15 @@ app.get("/", async ({ env: { COUNTER }, html, req }) => {
       </head>
       <body>
         <h1>Count: {count}</h1>
+        <button id="increment">Increment</button>
         <script async type="module" src={browserEntry} />
       </body>
     </html>
   );
+});
+
+app.post("/increment", async ({ env: { COUNTER }, req }) => {
+  return COUNTER.get(COUNTER.idFromName("global")).fetch(req.raw);
 });
 
 export default app;
