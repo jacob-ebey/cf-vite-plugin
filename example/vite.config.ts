@@ -10,8 +10,6 @@ import cloudflare, {
 import react from "@vitejs/plugin-react";
 import { unstable_getMiniflareWorkerOptions } from "wrangler";
 
-const browserEntry = "/src/browser.tsx";
-
 const { main } = unstable_getMiniflareWorkerOptions("wrangler.dev.toml");
 if (!main) {
   throw new Error("Missing main in wrangler.dev.toml");
@@ -38,9 +36,10 @@ export default defineConfig({
     client: {
       build: {
         assetsInlineLimit: 0,
+        manifest: true,
         outDir: "dist/browser",
         rollupOptions: {
-          input: browserEntry,
+          input: ["/src/browser.tsx", "/src/global.css"],
         },
       },
     },
@@ -48,6 +47,7 @@ export default defineConfig({
       build: {
         emptyOutDir: true,
         outDir: "dist/workerd",
+        assetsInlineLimit: 0,
       },
       resolve: {
         mainFields: ["module"],
@@ -88,41 +88,38 @@ export default defineConfig({
       },
     },
     {
-      name: "virtual-assets",
+      name: "bridged-assets",
       async resolveId(id, importer) {
-        if (id.startsWith("asset:")) {
-          if (this.environment?.config.command !== "build") {
-            return `\0${id}`;
+        if (id.startsWith("bridge:")) {
+          if (!this.environment?.config.ssr) {
+            throw new Error("Cannot bridge assets from a client build.");
           }
-          const baseId = id.slice("asset:".length);
-          const resolved = await this.resolve(baseId, importer, {
+
+          const baseId = id.slice("bridge:".length);
+          const postfix = this.environment.config.command !== "build" ? "" : "";
+          const resolved = await this.resolve(baseId + postfix, importer, {
             skipSelf: true,
           });
           if (!resolved) {
             throw new Error(`Could not resolve asset: ${baseId}`);
           }
 
-          return `\0asset:${resolved.id}`;
-        }
-
-        if (id === "__STATIC_CONTENT_MANIFEST") {
-          return {
-            id,
-            external: true,
-          };
+          // The # is to stop vite from trying to transform the asset.
+          return `\0bridge:${resolved.id}#`;
         }
       },
       async load(id) {
-        if (id.startsWith("\0asset:")) {
+        if (id.startsWith("\0bridge:") && id.endsWith("#")) {
           if (!this.environment?.config.ssr) {
-            throw new Error(
-              "Asset imports are only supported in a server environment. Enable 'ssr' in your vite environment config."
-            );
+            throw new Error("Cannot bridge assets from a client build.");
           }
+          const baseId = id.slice("\0bridge:".length, -1);
+          const relative = path
+            .relative(this.environment.config.root, baseId)
+            .replace(/\\/g, "/");
 
-          const baseId = id.slice("\0asset:".length);
           if (this.environment.config.command !== "build") {
-            return `export default "${id.slice("\0asset:".length)}";`;
+            return `export default "/${relative}";`;
           }
 
           if (!clientBuildPromise) {
@@ -131,15 +128,30 @@ export default defineConfig({
           const clientBuildResults = await clientBuildPromise;
           const clientBuild = clientBuildResults as Rollup.RollupOutput;
 
-          console.log({ baseId });
-          const output = clientBuild.output.find(
-            (o) => "facadeModuleId" in o && o.facadeModuleId === baseId
+          const manifest = clientBuild.output.find(
+            (o) => o.fileName === ".vite/manifest.json"
           );
-          if (!output) {
-            throw new Error(`Could not find browser output for ${baseId}`);
+          if (
+            !manifest ||
+            !("source" in manifest) ||
+            typeof manifest.source !== "string"
+          ) {
+            throw new Error("Could not find client manifest.");
           }
-          const publicPath = this.environment.config.base;
-          return `export default "${publicPath}${output.fileName}";`;
+          const manifestJson = JSON.parse(manifest.source);
+          let manifestFile = manifestJson[relative]?.file as string | undefined;
+
+          if (!manifestFile) {
+            const output = clientBuild.output.find(
+              (o) => "facadeModuleId" in o && o.facadeModuleId === baseId
+            );
+            if (!output) {
+              throw new Error(`Could not find browser output for ${baseId}`);
+            }
+            manifestFile = output.fileName;
+          }
+
+          return `export default "${this.environment.config.base}${manifestFile}";`;
         }
       },
     },

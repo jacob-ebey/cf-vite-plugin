@@ -69,6 +69,14 @@ export default function cloudflareVitePlugin(
         };
       }
     },
+    resolveId(id) {
+      if (id === "__STATIC_CONTENT_MANIFEST") {
+        return {
+          id,
+          external: true,
+        };
+      }
+    },
   };
 }
 
@@ -81,7 +89,7 @@ export type WorkerdDevEnvironment = DevEnvironment & {
   api: WorkerdDevApi;
 };
 
-async function createWorkerdDevEnvironment(
+export async function createWorkerdDevEnvironment(
   name: string,
   config: ResolvedConfig,
   options: CloudflareVitePluginOptions,

@@ -19,8 +19,11 @@
     "@jacob-ebey/cf-vite-plugin": "workspace:*",
     "@types/node": "$types__node",
     "@vitejs/plugin-react": "4.3.0",
+    "autoprefixer": "10.4.19",
+    "postcss": "8.4.38",
+    "tailwindcss": "3.4.3",
     "typescript": "$typescript",
-    "wrangler": "$wrangler",
-    "vite": "$vite"
+    "vite": "$vite",
+    "wrangler": "$wrangler"
   }
 }

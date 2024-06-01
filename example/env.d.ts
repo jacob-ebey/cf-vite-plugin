@@ -3,7 +3,7 @@ declare module "__STATIC_CONTENT_MANIFEST" {
   export default manifest;
 }
 
-declare module "asset:*" {
+declare module "bridge:*" {
   const url: string;
   export default url;
 }

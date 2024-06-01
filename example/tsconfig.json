@@ -1,5 +1,6 @@
 {
   "$schema": "http://json.schemastore.org/tsconfig",
+  "include": ["env.d.ts", "tailwind.config.ts", "vite.config.ts", "src/**/*"],
   "compilerOptions": {
     "target": "ES2022",
     "module": "Node16",
