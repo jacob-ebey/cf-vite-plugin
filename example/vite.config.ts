@@ -49,16 +49,11 @@ export default defineConfig({
         emptyOutDir: true,
         outDir: "dist/workerd",
       },
-      // dev: {
-      //   optimizeDeps: {
-      //     // include: ["@cloudflare/kv-asset-handler"],
-      //   },
-      // },
       resolve: {
         mainFields: ["module"],
         conditions: ["workerd", "module"],
         noExternal: true,
-        external: ["@cloudflare/kv-asset-handler"]
+        external: ["@cloudflare/kv-asset-handler"],
       },
     },
   },
