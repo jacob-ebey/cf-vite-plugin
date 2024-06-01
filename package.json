@@ -1,0 +1,19 @@
+{
+  "private": true,
+  "name": "cf-vite-plugin",
+  "pnpm": {
+    "overrides": {
+      "@cloudflare/workers-types": "4.20240529.0",
+      "@types/node": "20.13.0",
+      "miniflare": "3.20240524.1",
+      "tsup": "8.0.2",
+      "typescript": "5.4.5",
+      "wrangler": "3.58.0",
+      "vite": "6.0.0-alpha.17"
+    }
+  },
+  "scripts": {
+    "build": "pnpm --recursive build",
+    "dev": "pnpm --parallel dev"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "example",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build --app",
+    "start": "wrangler dev --local dist/wrangler.js",
+    "deploy": "pnpm build && wrangler publish"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "$cloudflare__workers-types",
+    "@hattip/adapter-node": "0.0.45",
+    "@jacob-ebey/cf-vite-plugin": "workspace:*",
+    "@types/node": "$types__node",
+    "typescript": "$typescript",
+    "wrangler": "$wrangler",
+    "vite": "$vite"
+  }
+}

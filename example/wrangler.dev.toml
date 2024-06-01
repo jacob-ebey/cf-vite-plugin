@@ -1,0 +1,14 @@
+main = "src/wrangler.ts"
+compatibility_date = "2024-05-28"
+
+[[kv_namespaces]]
+binding = "COUNTER_KV"
+id = "fdsa"
+
+[[durable_objects.bindings]]
+name = "COUNTER"
+class_name = "Counter"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["Counter"]

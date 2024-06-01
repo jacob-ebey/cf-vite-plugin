@@ -1,0 +1,16 @@
+name = "cf-vite-plugin-example"
+workers_dev = true
+main = "dist/wrangler.js"
+compatibility_date = "2024-05-28"
+
+[[kv_namespaces]]
+binding = "COUNTER_KV"
+id = "2d5935f2fa4548e9ae24fb06926105a2"
+
+[[durable_objects.bindings]]
+name = "COUNTER"
+class_name = "Counter"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["Counter"]
