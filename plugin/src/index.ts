@@ -109,6 +109,7 @@ async function createWorkerdDevEnvironment(
     unsafeEvalBinding: "__viteUnsafeEval",
     d1Databases,
     kvNamespaces,
+    r2Buckets,
     bindings: {
       ...bindings,
       __viteRoot: config.root,
@@ -155,10 +156,6 @@ async function createWorkerdDevEnvironment(
     kvPersist: options.persist,
     r2Persist: options.persist,
     cachePersist: options.persist,
-    // bindings,
-    // d1Databases,
-    // kvNamespaces,
-    // r2Buckets,
     workers: [
       {
         ...baseRunnerOptions,

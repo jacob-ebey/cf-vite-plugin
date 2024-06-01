@@ -16,6 +16,7 @@ export class Counter implements DurableObject {
     switch (`${request.method} ${url.pathname}`) {
       case "GET /value":
         return new Response(String(await this.#getCounterValue()));
+      case "GET /increment":
       case "POST /increment":
         return new Response(String(await this.#increment()));
       default:
