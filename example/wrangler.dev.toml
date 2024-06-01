@@ -1,4 +1,4 @@
-main = "src/wrangler.ts"
+main = "src/workerd.ts"
 compatibility_date = "2024-05-28"
 
 [[kv_namespaces]]

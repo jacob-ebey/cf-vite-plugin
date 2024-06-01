@@ -1,6 +1,4 @@
-type Env = {
-  COUNTER_KV: KVNamespace;
-};
+import { Env } from "./env.js";
 
 export class Counter implements DurableObject {
   #env: Env;

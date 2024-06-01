@@ -1,7 +1,13 @@
 name = "cf-vite-plugin-example"
 workers_dev = true
-main = "dist/wrangler.js"
+main = "dist/workerd/workerd.js"
 compatibility_date = "2024-05-28"
+
+[build]
+command = "pnpm build"
+
+[site]
+bucket = "./dist/browser"
 
 [[kv_namespaces]]
 binding = "COUNTER_KV"

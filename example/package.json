@@ -5,15 +5,20 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build --app",
-    "start": "wrangler dev --local dist/wrangler.js",
-    "deploy": "pnpm build && wrangler publish"
+    "build": "vite build --app && tsc",
+    "start": "wrangler dev --local dist/workerd/workerd.js",
+    "deploy": "wrangler publish"
+  },
+  "dependencies": {
+    "@cloudflare/kv-asset-handler": "0.3.2",
+    "hono": "4.4.2"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "$cloudflare__workers-types",
     "@hattip/adapter-node": "0.0.45",
     "@jacob-ebey/cf-vite-plugin": "workspace:*",
     "@types/node": "$types__node",
+    "@vitejs/plugin-react": "4.3.0",
     "typescript": "$typescript",
     "wrangler": "$wrangler",
     "vite": "$vite"
