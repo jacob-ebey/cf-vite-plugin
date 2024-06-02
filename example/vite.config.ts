@@ -1,13 +1,13 @@
 import path from "node:path";
 
-import type { Rollup } from "vite";
-import { defineConfig } from "vite";
-
 import { createMiddleware } from "@hattip/adapter-node/native-fetch";
 import cloudflare, {
   type WorkerdDevEnvironment,
 } from "@jacob-ebey/cf-vite-plugin";
-import react from "@vitejs/plugin-react";
+import serverComponents from "@jacob-ebey/hono-server-components/vite";
+import { preact } from "@preact/preset-vite";
+import type { Rollup } from "vite";
+import { defineConfig } from "vite";
 import { unstable_getMiniflareWorkerOptions } from "wrangler";
 
 const { main } = unstable_getMiniflareWorkerOptions("wrangler.dev.toml");
@@ -25,11 +25,12 @@ declare global {
 
 global.clientBuildPromise = global.clientBuildPromise || undefined;
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   builder: {
     async buildApp(builder) {
       clientBuildPromise = builder.build(builder.environments.client);
-      await builder.build(builder.environments.workerd);
+      await builder.build(builder.environments.prerender);
+      await builder.build(builder.environments.server);
     },
   },
   environments: {
@@ -40,39 +41,86 @@ export default defineConfig({
         outDir: "dist/browser",
         rollupOptions: {
           input: ["/src/browser.tsx", "/src/global.css"],
+          preserveEntrySignatures: "exports-only",
         },
       },
     },
-    workerd: {
+    prerender: {
+      nodeCompatible: true,
+      webCompatible: true,
       build: {
         emptyOutDir: true,
-        outDir: "dist/workerd",
+        outDir: "dist/prerender",
         assetsInlineLimit: 0,
+        rollupOptions: {
+          preserveEntrySignatures: "exports-only",
+          input: "/src/worker.ts",
+        },
       },
       resolve: {
         mainFields: ["module"],
         conditions: ["workerd", "module"],
-        noExternal: true,
-        external: ["@cloudflare/kv-asset-handler"],
+        noExternal: command !== "build" ? true : undefined,
+        external:
+          command !== "build" ? ["@cloudflare/kv-asset-handler"] : undefined,
+      },
+    },
+    server: {
+      nodeCompatible: true,
+      webCompatible: true,
+      build: {
+        emptyOutDir: true,
+        outDir: "dist/server",
+        assetsInlineLimit: 0,
+        rollupOptions: {
+          preserveEntrySignatures: "exports-only",
+          input: {
+            "durables/counter": "/src/durable-objects/counter.ts",
+            "durables/server-components":
+              "/src/durable-objects/server-components.tsx",
+          },
+        },
+      },
+      resolve: {
+        mainFields: ["module"],
+        conditions: ["workerd", "module"],
+        noExternal: command !== "build" ? true : undefined,
+        external:
+          command !== "build" ? ["@cloudflare/kv-asset-handler"] : undefined,
       },
     },
   },
   plugins: [
-    react({
-      jsxRuntime: "automatic",
+    serverComponents({
+      serverEnvironments: ["server"],
+    }),
+    preact({
+      devToolsEnabled: false,
+      prefreshEnabled: false,
+      reactAliasesEnabled: false,
       jsxImportSource: "hono/jsx",
     }),
     cloudflare({
-      environment: "workerd",
+      environments: ["prerender", "server"],
       persist: true,
       wrangler: {
         configPath: "./wrangler.dev.toml",
+      },
+      durableObjects: {
+        COUNTER: {
+          environment: "prerender",
+          file: "/src/durable-objects/counter.ts",
+        },
+        SERVER_COMPONENTS: {
+          environment: "server",
+          file: "/src/durable-objects/server-components.tsx",
+        },
       },
     }),
     {
       name: "dev-server",
       configureServer(server) {
-        const devEnv = server.environments.workerd as WorkerdDevEnvironment;
+        const devEnv = server.environments.prerender as WorkerdDevEnvironment;
 
         const nodeMiddleware = createMiddleware(
           (ctx) => devEnv.api.dispatchFetch(main, ctx.request),
@@ -156,4 +204,4 @@ export default defineConfig({
       },
     },
   ],
-});
+}));

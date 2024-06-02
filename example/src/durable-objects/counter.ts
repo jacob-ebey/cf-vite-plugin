@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 
-import { Env } from "./env.js";
+import { Env } from "../env.js";
 
 const app = new Hono<{ Bindings: Env & { state: DurableObjectState } }>()
   .get("/value", async ({ env: { COUNTER_KV }, json }) => {

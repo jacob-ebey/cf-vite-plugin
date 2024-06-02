@@ -1,4 +1,4 @@
-main = "src/workerd.ts"
+main = "src/worker.ts"
 compatibility_date = "2024-05-28"
 
 [[kv_namespaces]]
@@ -9,6 +9,10 @@ id = "fdsa"
 name = "COUNTER"
 class_name = "Counter"
 
+[[durable_objects.bindings]]
+name = "SERVER_COMPONENTS"
+class_name = "ServerComponents"
+
 [[migrations]]
 tag = "v1"
-new_classes = ["Counter"]
+new_classes = ["Counter", "ServerComponents"]

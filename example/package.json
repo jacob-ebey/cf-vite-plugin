@@ -6,23 +6,26 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build --app && tsc",
-    "start": "wrangler dev --local dist/workerd/workerd.js",
+    "start": "wrangler dev --local wrangler.js",
     "deploy": "wrangler publish"
   },
   "dependencies": {
-    "@cloudflare/kv-asset-handler": "0.3.2",
-    "hono": "4.4.2"
+    "@cloudflare/kv-asset-handler": "$cloudflare__kv-asset-handler",
+    "@jacob-ebey/hono-server-components": "workspace:*",
+    "hono": "$hono"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "$cloudflare__workers-types",
     "@hattip/adapter-node": "0.0.45",
     "@jacob-ebey/cf-vite-plugin": "workspace:*",
+    "@preact/preset-vite": "2.8.2",
     "@types/node": "$types__node",
     "@vitejs/plugin-react": "4.3.0",
     "autoprefixer": "10.4.19",
     "postcss": "8.4.38",
     "tailwindcss": "3.4.3",
     "typescript": "$typescript",
+    "unplugin-rsc": "$unplugin-rsc",
     "vite": "$vite",
     "wrangler": "$wrangler"
   }

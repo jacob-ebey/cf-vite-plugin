@@ -22,12 +22,19 @@ import type { EvalApi, EvalMetadata, RunnerFetchMetadata } from "./shared.js";
 import { ANY_URL, RUNNER_EVAL_PATH, RUNNER_INIT_PATH } from "./shared.js";
 
 export type CloudflareVitePluginOptions = {
-  environment: string;
+  environments: string[];
   persist?: boolean;
   worker?: WorkerOptions;
   wrangler?: {
     configPath?: string;
   };
+  durableObjects?: Record<
+    string,
+    {
+      environment?: string;
+      file?: string;
+    }
+  >;
 };
 
 type WranglerOptions = ReturnType<typeof unstable_getMiniflareWorkerOptions>;
@@ -46,28 +53,38 @@ export default function cloudflareVitePlugin(
     );
   }
 
+  const devEnvs = new Map<string, WorkerdDevEnvironment>();
+
   return {
     name: "cloudflare-vite-plugin",
-    configEnvironment(name, config, env) {
-      if (name === options.environment) {
-        return {
-          build: {
-            ssr: true,
-            rollupOptions: {
-              input: entry,
-            },
-          },
-          dev: {
-            createEnvironment: (name, config) =>
-              createWorkerdDevEnvironment(
+    config(config, env) {
+      return {
+        environments: Object.fromEntries(
+          options.environments.map(
+            (name) =>
+              [
                 name,
-                config,
-                options,
-                wranglerOptions
-              ),
-          },
-        };
-      }
+                {
+                  build: {
+                    ssr: true,
+                  },
+                  dev: {
+                    createEnvironment: (name, config) => {
+                      const env = createWorkerdDevEnvironment(
+                        name,
+                        config,
+                        options,
+                        wranglerOptions,
+                        devEnvs
+                      );
+                      return env;
+                    },
+                  },
+                },
+              ] as const
+          )
+        ),
+      };
     },
     resolveId(id) {
       if (id === "__STATIC_CONTENT_MANIFEST") {
@@ -75,6 +92,20 @@ export default function cloudflareVitePlugin(
           id,
           external: true,
         };
+      }
+    },
+    hotUpdate(ctx) {
+      if (options.environments.includes(ctx.environment.name)) {
+        for (const name of options.environments) {
+          const devEnv = devEnvs.get(name);
+          if (!devEnv) return;
+          for (const mod of ctx.modules) {
+            console.log({
+              id: mod.id,
+            });
+            devEnv.moduleGraph.invalidateModule(mod);
+          }
+        }
       }
     },
   };
@@ -93,7 +124,8 @@ export async function createWorkerdDevEnvironment(
   name: string,
   config: ResolvedConfig,
   options: CloudflareVitePluginOptions,
-  wranglerOptions: WranglerOptions
+  wranglerOptions: WranglerOptions,
+  devEnvs: Map<string, WorkerdDevEnvironment>
 ): Promise<WorkerdDevEnvironment> {
   const entry = wranglerOptions.main;
   if (!entry) {
@@ -109,6 +141,8 @@ export async function createWorkerdDevEnvironment(
     kvNamespaces,
     r2Buckets,
     serviceBindings,
+    compatibilityDate,
+    compatibilityFlags,
     ...workerOptions
   } = wranglerOptions.workerOptions;
 
@@ -118,6 +152,8 @@ export async function createWorkerdDevEnvironment(
     d1Databases,
     kvNamespaces,
     r2Buckets,
+    compatibilityDate,
+    compatibilityFlags,
     bindings: {
       ...bindings,
       __viteRoot: config.root,
@@ -125,12 +161,22 @@ export async function createWorkerdDevEnvironment(
     serviceBindings: {
       ...serviceBindings,
       __viteFetchModule: async (request) => {
-        const args = await request.json();
+        const [id, importer, environment] = (await request.json()) as [
+          string,
+          string,
+          string | undefined
+        ];
+        const devEnvToUse = environment
+          ? await devEnvs.get(environment)
+          : devEnv;
         try {
-          const result = await devEnv.fetchModule(...(args as [any, any]));
+          if (!devEnvToUse) {
+            throw new Error(`DevEnvironment ${environment} not found`);
+          }
+          const result = await devEnvToUse.fetchModule(id, importer);
           return new MiniflareResponse(JSON.stringify(result));
         } catch (error) {
-          console.error("[fetchModule]", args, error);
+          console.error("[fetchModule]", [id, importer], error);
           throw error;
         }
       },
@@ -212,7 +258,12 @@ export async function createWorkerdDevEnvironment(
                     new URL("./durable-object-runner.js", import.meta.url)
                   ),
                   "utf-8"
-                ).replace("___EXPORTED___", durableObjectConfig.className),
+                )
+                  .replace(
+                    "___ENVIRONMENT___",
+                    options.durableObjects?.[binding]?.environment || name
+                  )
+                  .replace("___EXPORTED___", durableObjectConfig.className),
               },
             ],
           } satisfies WorkerOptions;
@@ -254,7 +305,9 @@ export async function createWorkerdDevEnvironment(
           {
             headers: {
               Upgrade: "websocket",
-              "x-vite-fetch": JSON.stringify({ entry }),
+              "x-vite-fetch": JSON.stringify({
+                entry: options.durableObjects?.[binding]?.file || entry,
+              }),
             },
           }
         );
@@ -351,7 +404,9 @@ export async function createWorkerdDevEnvironment(
     },
   };
 
-  return Object.assign(devEnv, { api });
+  const res = Object.assign(devEnv, { api });
+  devEnvs.set(name, res);
+  return res;
 }
 
 function createSimpleHMRChannel(options: {

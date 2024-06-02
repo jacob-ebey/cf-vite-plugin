@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json.schemastore.org/tsconfig",
+  "include": ["src/**/*"],
+  "compilerOptions": {
+    "outDir": "dist",
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "target": "ES2022",
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "strict": true,
+    "skipLibCheck": true,
+    "types": ["node"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx",
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@jacob-ebey/hono-server-components/runtime": ["./src/runtime.ts"]
+    }
+  },
+  "ts-node": {
+    "transpileOnly": true
+  }
+}

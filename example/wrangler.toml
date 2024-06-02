@@ -1,6 +1,6 @@
 name = "cf-vite-plugin-example"
 workers_dev = true
-main = "dist/workerd/workerd.js"
+main = "wrangler.js"
 compatibility_date = "2024-05-28"
 
 [build]
@@ -17,6 +17,10 @@ id = "2d5935f2fa4548e9ae24fb06926105a2"
 name = "COUNTER"
 class_name = "Counter"
 
+[[durable_objects.bindings]]
+name = "SERVER_COMPONENTS"
+class_name = "ServerComponents"
+
 [[migrations]]
 tag = "v1"
-new_classes = ["Counter"]
+new_classes = ["Counter", "ServerComponents"]

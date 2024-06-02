@@ -1,12 +1,15 @@
-console.log("Hello, Browser!" as string);
+import { rootPromise } from "@jacob-ebey/hono-server-components/browser";
+import type { Child } from "hono/jsx";
+import { render, startTransition } from "hono/jsx/dom";
 
-const incrementButton = document.getElementById("increment");
-if (!incrementButton) throw new Error("Element not found: increment");
-incrementButton.addEventListener(
-  "click",
-  async () => {
-    await fetch("/increment", { method: "POST" });
-    location.reload();
-  },
-  { once: true }
-);
+rootPromise
+  .then(async (decoded) => {
+    // await decoded.done;
+    startTransition(() => {
+      console.log(decoded.value);
+      render(decoded.value as Child, document.documentElement);
+    });
+  })
+  .catch((reason) => {
+    console.error(reason);
+  });

@@ -14,14 +14,14 @@
     "build": "tsup --clean"
   },
   "dependencies": {
-    "@hattip/adapter-node": "0.0.45",
-    "@hiogawa/utils": "1.6.4-pre.2",
     "miniflare": "$miniflare",
     "wrangler": "$wrangler",
     "vite": "$vite"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "$cloudflare__workers-types",
+    "@hattip/adapter-node": "0.0.45",
+    "@hiogawa/utils": "1.6.4-pre.2",
     "@types/node": "$types__node",
     "tsup": "$tsup",
     "typescript": "$typescript",

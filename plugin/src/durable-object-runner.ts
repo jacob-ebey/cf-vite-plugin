@@ -12,6 +12,7 @@ declare global {
 globalThis.runner = globalThis.runner || undefined;
 globalThis.options = globalThis.options || undefined;
 
+const environment = "___ENVIRONMENT___";
 const exported = "___EXPORTED___";
 
 export class DurableObjectRunnerObject implements DurableObject {
@@ -105,7 +106,7 @@ export function createRunner(env: RunnerEnv, webSocket: WebSocket) {
           const response = await env.__viteFetchModule.fetch(
             new Request(ANY_URL, {
               method: "POST",
-              body: JSON.stringify(args),
+              body: JSON.stringify([...args, environment]),
             })
           );
           tinyassert(response.ok);

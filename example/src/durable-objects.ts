@@ -4,8 +4,21 @@ import { hc } from "hono/client";
 import { createMiddleware } from "hono/factory";
 import { UnionToIntersection } from "hono/utils/types";
 
-import type { CounterAPI } from "./counter.js";
+import type { CounterAPI } from "./durable-objects/counter.js";
 import type { Env } from "./env.js";
+
+export const durableObjectsMiddleware = createMiddleware<{
+  Bindings: Env;
+  Variables: {
+    counter: DurableClient<CounterAPI>;
+  };
+}>(async ({ env: { COUNTER }, set }, next) => {
+  set(
+    "counter",
+    createDurableClient<CounterAPI>(COUNTER.get(COUNTER.idFromName("global")))
+  );
+  return next();
+});
 
 type PathToChain<
   Path extends string,
@@ -48,16 +61,3 @@ function createDurableClient<T extends Hono<any, any, any>>(
     },
   });
 }
-
-export const durableObjectsMiddleware = createMiddleware<{
-  Bindings: Env;
-  Variables: {
-    counter: DurableClient<CounterAPI>;
-  };
-}>(async ({ env: { COUNTER }, set }, next) => {
-  set(
-    "counter",
-    createDurableClient<CounterAPI>(COUNTER.get(COUNTER.idFromName("global")))
-  );
-  return next();
-});

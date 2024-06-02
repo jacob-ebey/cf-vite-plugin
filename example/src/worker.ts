@@ -1,8 +1,6 @@
 import app from "./app.js";
 import type { Env } from "./env.js";
 
-export { Counter } from "./counter.js";
-
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
