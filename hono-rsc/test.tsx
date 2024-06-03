@@ -37,7 +37,7 @@ async function render(value: unknown, stream?: true) {
     try {
       await next();
     } catch (reason) {
-      console.log(reason);
+      console.error(reason);
       throw reason;
     }
   });

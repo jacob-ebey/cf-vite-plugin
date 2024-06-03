@@ -120,10 +120,6 @@ export function decode(
                     unknown
                   >;
                   if (typeof Component !== "function") {
-                    console.log(
-                      new Error(`Invalid client reference: ${name} (${id})`)
-                        .stack
-                    );
                     throw new Error(
                       `Invalid client reference: ${name} (${id})`
                     );

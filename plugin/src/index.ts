@@ -96,16 +96,15 @@ export default function cloudflareVitePlugin(
     },
     hotUpdate(ctx) {
       if (options.environments.includes(ctx.environment.name)) {
-        for (const name of options.environments) {
-          const devEnv = devEnvs.get(name);
-          if (!devEnv) return;
-          for (const mod of ctx.modules) {
-            console.log({
-              id: mod.id,
-            });
-            devEnv.moduleGraph.invalidateModule(mod);
-          }
+        for (const mod of ctx.modules) {
+          ctx.environment.moduleGraph.invalidateModule(mod);
         }
+        const devEnv = devEnvs.get(ctx.environment.name);
+        devEnv?.hot.send({
+          type: "full-reload",
+        });
+
+        return [];
       }
     },
   };

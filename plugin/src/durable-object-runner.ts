@@ -4,16 +4,20 @@ import { ModuleRunner } from "vite/module-runner";
 import type { DurableObjectRunnerFetchMetadata, RunnerEnv } from "./shared.js";
 import { ANY_URL, RUNNER_INIT_PATH } from "./shared.js";
 
-declare global {
-  var runner: undefined | ModuleRunner;
-  var options: undefined | DurableObjectRunnerFetchMetadata;
-}
-
-globalThis.runner = globalThis.runner || undefined;
-globalThis.options = globalThis.options || undefined;
-
 const environment = "___ENVIRONMENT___";
 const exported = "___EXPORTED___";
+
+declare global {
+  var runner___ENVIRONMENT___: ModuleRunner | undefined;
+  var options___ENVIRONMENT______EXPORTED___:
+    | DurableObjectRunnerFetchMetadata
+    | undefined;
+}
+
+globalThis[`runner${environment}`] =
+  globalThis[`runner${environment}`] || undefined;
+globalThis[`options${environment}${exported}`] =
+  globalThis[`options${environment}${exported}`] || undefined;
 
 export class DurableObjectRunnerObject implements DurableObject {
   #state: DurableObjectState;
@@ -68,6 +72,10 @@ export class DurableObjectRunnerObject implements DurableObject {
   }
 
   async #getInstance(): Promise<DurableObject> {
+    const runner = globalThis[`runner${environment}`] as ModuleRunner;
+    const options = globalThis[
+      `options${environment}${exported}`
+    ] as DurableObjectRunnerFetchMetadata;
     tinyassert(runner, "missing runner");
     tinyassert(options, "missing options");
     const mod = await runner.import(options.entry);
@@ -83,9 +91,10 @@ export class DurableObjectRunnerObject implements DurableObject {
     if (url.pathname === RUNNER_INIT_PATH) {
       const pair = new WebSocketPair();
       (pair[0] as any).accept();
-      tinyassert(!runner);
-      runner = createRunner(this.#env, pair[0]);
-      options = JSON.parse(
+      if (!globalThis[`runner${environment}`]) {
+        globalThis[`runner${environment}`] = createRunner(this.#env, pair[0]);
+      }
+      globalThis[`options${environment}${exported}`] = JSON.parse(
         request.headers.get("x-vite-fetch")!
       ) as DurableObjectRunnerFetchMetadata;
       return new Response(null, { status: 101, webSocket: pair[1] });
