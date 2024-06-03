@@ -63,6 +63,7 @@ export default defineConfig(({ command }) => ({
         emptyOutDir: true,
         outDir: "dist/prerender",
         assetsInlineLimit: 0,
+        target: "ESNext",
         rollupOptions: {
           preserveEntrySignatures: "exports-only",
           input: ["/src/worker.ts", "virtual:client-modules"],
@@ -83,6 +84,7 @@ export default defineConfig(({ command }) => ({
         emptyOutDir: true,
         outDir: "dist/server",
         assetsInlineLimit: 0,
+        target: "ESNext",
         rollupOptions: {
           preserveEntrySignatures: "exports-only",
           input: {

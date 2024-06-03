@@ -48,6 +48,12 @@ export default {
           {
             ASSET_NAMESPACE: env.__STATIC_CONTENT,
             ASSET_MANIFEST: assetManifest,
+            cacheControl: {
+              // 1 minute
+              browserTTL: 60,
+              // 1 day
+              edgeTTL: 86400, 
+            }
           }
         );
       } catch (e) {}

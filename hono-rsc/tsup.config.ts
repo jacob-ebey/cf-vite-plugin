@@ -27,7 +27,14 @@ export default [
     format: ["esm"],
     platform: "browser",
     dts: false,
+  }),
+  defineConfig({
+    entry: ["src/browser.vite.ts"],
+    format: ["esm"],
+    platform: "browser",
+    dts: false,
     external: [
+      "@jacob-ebey/hono-server-components/browser",
       "@jacob-ebey/hono-server-components/runtime",
       "virtual:client-modules",
     ],

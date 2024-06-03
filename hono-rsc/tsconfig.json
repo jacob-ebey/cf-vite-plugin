@@ -15,7 +15,9 @@
     "jsxImportSource": "hono/jsx",
     "sourceMap": true,
     "baseUrl": ".",
+    "rootDir": "./src",
     "paths": {
+      "@jacob-ebey/hono-server-components/browser": ["./src/browser.ts"],
       "@jacob-ebey/hono-server-components/runtime": ["./src/runtime.ts"]
     }
   },

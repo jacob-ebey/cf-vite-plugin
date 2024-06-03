@@ -11,6 +11,10 @@
       "types": "./dist/browser.d.ts",
       "default": "./dist/browser.js"
     },
+    "./browser.vite": {
+      "types": "./dist/browser.vite.d.ts",
+      "default": "./dist/browser.vite.js"
+    },
     "./modules": "./modules.d.ts",
     "./runtime": {
       "types": "./dist/runtime.d.ts",

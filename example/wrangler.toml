@@ -23,4 +23,8 @@ class_name = "ServerComponents"
 
 [[migrations]]
 tag = "v1"
-new_classes = ["Counter", "ServerComponents"]
+new_classes = ["Counter"]
+
+[[migrations]]
+tag = "v2"
+new_classes = ["ServerComponents"]
