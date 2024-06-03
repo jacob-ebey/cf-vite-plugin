@@ -6,28 +6,38 @@ import clientModules from "virtual:client-modules";
 
 import { rscStream } from "@jacob-ebey/hono-server-components/browser";
 
-const rootPromise = decode(rscStream, {
+const rootDecodePromise = decode(rscStream, {
   loadClientModule(id) {
     if (import.meta.env.PROD) {
       return clientModules[id]();
     }
     return import(/* @vite-ignore */ id);
   },
-}).then((decoded) => decoded);
+});
+rootDecodePromise.then((decoded) => decoded.done).catch(() => {});
 
-export function hydrateDocument() {
-  return rootPromise.then(async (decoded) => {
+export function hydrateDocument(
+  { signal }: { signal?: AbortSignal } = {},
+  decodePromise: Promise<{
+    done: Promise<undefined>;
+    value: unknown;
+  }> = rootDecodePromise
+) {
+  return decodePromise.then(async (decoded) => {
     let run = true;
-    while (run) {
+    while (run && !signal?.aborted) {
       run = false;
       try {
         render(
           decoded.value as Child,
           {
             replaceChildren: (documentFragment: DocumentFragment) => {
-              const viteStyles = document.head.querySelectorAll(
-                "style[data-vite-dev-id]"
-              );
+              let viteStyles;
+              if (import.meta.env.DEV) {
+                viteStyles = document.head.querySelectorAll(
+                  "style[data-vite-dev-id]"
+                );
+              }
 
               // copy over the <html> attributes to the current document
               const html = documentFragment.querySelector("html");
@@ -62,13 +72,15 @@ export function hydrateDocument() {
                 }
               }
 
-              for (const style of Array.from(viteStyles)) {
-                const id = style.getAttribute("data-vite-dev-id");
-                const existingStyle = document.head.querySelector(
-                  `style[data-vite-dev-id="${id}"]`
-                );
-                if (!existingStyle) {
-                  document.head.appendChild(style);
+              if (import.meta.env.DEV) {
+                for (const style of Array.from(viteStyles!)) {
+                  const id = style.getAttribute("data-vite-dev-id");
+                  const existingStyle = document.head.querySelector(
+                    `style[data-vite-dev-id="${id}"]`
+                  );
+                  if (!existingStyle) {
+                    document.head.appendChild(style);
+                  }
                 }
               }
 
@@ -100,8 +112,8 @@ export function hydrateDocument() {
           "then" in reason &&
           typeof reason.then === "function"
         ) {
+          await Promise.resolve(reason).catch(() => {});
           run = true;
-          await reason;
           continue;
         }
 

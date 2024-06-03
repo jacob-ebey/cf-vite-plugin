@@ -18,7 +18,7 @@ function Entry({ entry }: { entry: string }) {
 }
 
 async function AsyncHello() {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  await new Promise((resolve) => setTimeout(resolve, Math.random() * 1000));
   return <p>Hello, World!</p>;
 }
 
@@ -29,11 +29,18 @@ export const app = new Hono<{ Bindings: Env & { state: DurableObjectState } }>()
       <html lang="en">
         <head>
           <meta charSet="utf-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
           <title>Counter</title>
           <Entry entry={stylesEntry} />
         </head>
         <body>
+          <ul>
+            <li>
+              <a href="/">Home</a>
+            </li>
+            <li>
+              <a href="/about">About</a>
+            </li>
+          </ul>
           {children}
           <Entry entry={browserEntry} />
         </body>
@@ -56,6 +63,30 @@ export const app = new Hono<{ Bindings: Env & { state: DurableObjectState } }>()
       <main>
         <div class="py-24 flex flex-col items-center">
           <h1 class="text-4xl font-bold">Hello, World!!</h1>
+          <Counter initialCount={count} />
+          <Suspense fallback={<p>Suspended...</p>}>
+            <AsyncHello />
+          </Suspense>
+        </div>
+      </main>
+    );
+  })
+  .get("/about", async ({ get, render, req }) => {
+    const id =
+      (
+        req.raw as {
+          cf?: IncomingRequestCfProperties;
+        }
+      ).cf?.country || "global";
+
+    const count = await get("counter")
+      .value.$get()
+      .then((res) => res.json());
+
+    return render(
+      <main>
+        <div class="py-24 flex flex-col items-center">
+          <h1 class="text-4xl font-bold">About!!</h1>
           <Counter initialCount={count} />
           <Suspense fallback={<p>Suspended...</p>}>
             <AsyncHello />

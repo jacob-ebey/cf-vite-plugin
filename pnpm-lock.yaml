@@ -45,6 +45,9 @@ importers:
       '@preact/preset-vite':
         specifier: 2.8.2
         version: 2.8.2(@babel/core@7.24.4)(preact@10.22.0)(vite@6.0.0-alpha.17(@types/node@20.13.0))
+      '@types/dom-navigation':
+        specifier: 1.0.3
+        version: 1.0.3
       '@types/node':
         specifier: 20.13.0
         version: 20.13.0
@@ -958,6 +961,9 @@ packages:
 
   '@types/babel__traverse@7.20.6':
     resolution: {integrity: sha512-r1bzfrm0tomOI8g1SzvCaQHo6Lcv6zu0EA+W2kHrt8dyrHQxGzBBL4kdkzIS+jBMV+EYcMAEAqXqYaLJq5rOZg==}
+
+  '@types/dom-navigation@1.0.3':
+    resolution: {integrity: sha512-nbkhQ2o6UUBn1uLwSrA//rFkqs8XRk5d7cE6jzzTl8MAIUs/nFMtFqVESwiYY1HGZxflzbFlXsZ8NNzTaoFs1Q==}
 
   '@types/estree@1.0.5':
     resolution: {integrity: sha512-/kYRxGDLWzHOB7q+wtSUQlFrtcdUccpfy+X+9iMBpHK8QLLhx2wIPYuS5DYtR9Wa/YlZAbIovy7qVdB1Aq6Lyw==}
@@ -2621,6 +2627,8 @@ snapshots:
   '@types/babel__traverse@7.20.6':
     dependencies:
       '@babel/types': 7.24.6
+
+  '@types/dom-navigation@1.0.3': {}
 
   '@types/estree@1.0.5': {}
 

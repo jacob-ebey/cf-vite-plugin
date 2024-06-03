@@ -48,12 +48,23 @@ export function rscConsumer<E extends Env = {}>({
     if (!response.body) {
       throw new Error("No body in RSC response");
     }
+    if (c.req.header("RSC") === "1") {
+      for (const [key, value] of response.headers) {
+        if (key.toLowerCase() === "set-cookie") continue;
+        c.header(key, value, { append: true });
+      }
+      for (const cookie of response.headers.getSetCookie()) {
+        c.header("Set-Cookie", cookie, { append: true });
+      }
+      c.header("Vary", "RSC", { append: true });
+      return c.body(response.body);
+    }
     const [rscStreamA, rscStreamB] = response.body.tee();
 
     const decoded = await decode(rscStreamA, {
       loadClientModule: loadClientModule || defaultLoadClientModule,
     });
-    c.executionCtx.waitUntil(decoded.done.catch(console.error));
+    c.executionCtx.waitUntil(decoded.done.catch(() => {}));
 
     const body = html`${raw("<!DOCTYPE html>")}${jsx(
       RequestContext.Provider,

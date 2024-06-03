@@ -204,9 +204,6 @@ export function encode(
 
             return ["a", result];
           case "string":
-            if (typeof node.type === "function") {
-              throw new Error("Cannot encode functional components.... YET ;)");
-            }
             return ["j", node.type, node.key, node.props];
           case "object":
             const clientReference = node.type as null | {

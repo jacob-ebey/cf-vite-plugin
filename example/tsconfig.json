@@ -18,6 +18,7 @@
     "types": [
       "@cloudflare/workers-types",
       "@jacob-ebey/hono-server-components/modules",
+      "dom-navigation",
       "vite/client"
     ],
     "jsx": "react-jsx",
