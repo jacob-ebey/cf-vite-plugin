@@ -48,15 +48,17 @@ export function rscConsumer<E extends Env = {}>({
     if (!response.body) {
       throw new Error("No body in RSC response");
     }
+
+    for (const [key, value] of response.headers) {
+      if (key.toLowerCase() === "set-cookie") continue;
+      c.header(key, value, { append: true });
+    }
+    for (const cookie of response.headers.getSetCookie()) {
+      c.header("Set-Cookie", cookie, { append: true });
+    }
+    c.header("Vary", "RSC", { append: true });
+
     if (c.req.header("RSC") === "1") {
-      for (const [key, value] of response.headers) {
-        if (key.toLowerCase() === "set-cookie") continue;
-        c.header(key, value, { append: true });
-      }
-      for (const cookie of response.headers.getSetCookie()) {
-        c.header("Set-Cookie", cookie, { append: true });
-      }
-      c.header("Vary", "RSC", { append: true });
       return c.body(response.body);
     }
     const [rscStreamA, rscStreamB] = response.body.tee();

@@ -11,10 +11,20 @@ export class ServerComponents implements DurableObject {
   }
 
   async fetch(request: Request) {
-    const res = await app.fetch(request, {
-      ...this.#env,
-      state: this.#state,
-    });
+    const executionCtx = {
+      passThroughOnException() {
+        throw new Error("passThroughOnException not implemented");
+      },
+      waitUntil() {},
+    };
+    const res = await app.fetch(
+      request,
+      {
+        ...this.#env,
+        state: this.#state,
+      },
+      executionCtx
+    );
     return res;
   }
 }

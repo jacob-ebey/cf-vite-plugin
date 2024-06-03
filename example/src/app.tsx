@@ -1,6 +1,7 @@
 import { rscRenderer } from "@jacob-ebey/hono-server-components";
 import { Hono } from "hono";
 import { Suspense } from "hono/jsx";
+import { withSWR } from "workers-swr";
 
 import browserEntry from "bridge:./browser.js";
 import stylesEntry from "bridge:./global.css";
@@ -47,51 +48,68 @@ export const app = new Hono<{ Bindings: Env & { state: DurableObjectState } }>()
       </html>
     ))
   )
-  .get("/", async ({ get, render, req }) => {
-    const id =
-      (
-        req.raw as {
-          cf?: IncomingRequestCfProperties;
-        }
-      ).cf?.country || "global";
+  .get("/", async ({ env, executionCtx, get, header, render, req }) => {
+    return withSWR(async () => {
+      const id =
+        (
+          req.raw as {
+            cf?: IncomingRequestCfProperties;
+          }
+        ).cf?.country || "global";
 
-    const count = await get("counter")
-      .value.$get()
-      .then((res) => res.json());
+      const count = await get("counter")
+        .value.$get()
+        .then((res) => res.json());
 
-    return render(
-      <main>
-        <div class="py-24 flex flex-col items-center">
-          <h1 class="text-4xl font-bold">Hello, World!!</h1>
-          <Counter initialCount={count} />
-          <Suspense fallback={<p>Suspended...</p>}>
-            <AsyncHello />
-          </Suspense>
-        </div>
-      </main>
-    );
+      header("Cache-Control", "public, max-age=5, stale-while-revalidate=1");
+
+      return render(
+        <main>
+          <div class="py-24 flex flex-col items-center">
+            <h1 class="text-4xl font-bold">Hello, World!!</h1>
+            <Counter initialCount={count} />
+            <Suspense fallback={<p>Suspended...</p>}>
+              <AsyncHello />
+            </Suspense>
+          </div>
+        </main>
+      );
+    })(req.raw, env, executionCtx);
   })
-  .get("/about", async ({ get, render, req }) => {
-    const id =
-      (
-        req.raw as {
-          cf?: IncomingRequestCfProperties;
+  .on(
+    ["GET", "POST"],
+    "/about",
+    async ({ env, executionCtx, get, render, req }) => {
+      return withSWR(async () => {
+        const id =
+          (
+            req.raw as {
+              cf?: IncomingRequestCfProperties;
+            }
+          ).cf?.country || "global";
+
+        if (req.method === "POST") {
+          await get("counter").increment.$post();
         }
-      ).cf?.country || "global";
 
-    const count = await get("counter")
-      .value.$get()
-      .then((res) => res.json());
+        const count = await get("counter")
+          .value.$get()
+          .then((res) => res.json());
 
-    return render(
-      <main>
-        <div class="py-24 flex flex-col items-center">
-          <h1 class="text-4xl font-bold">About!!</h1>
-          <Counter initialCount={count} />
-          <Suspense fallback={<p>Suspended...</p>}>
-            <AsyncHello />
-          </Suspense>
-        </div>
-      </main>
-    );
-  });
+        return render(
+          <main>
+            <div class="py-24 flex flex-col items-center">
+              <h1 class="text-4xl font-bold">About!!</h1>
+              <Counter initialCount={count} />
+              <Suspense fallback={<p>Suspended...</p>}>
+                <AsyncHello />
+              </Suspense>
+              <form method="post" action="/about">
+                <button type="submit">Increment</button>
+              </form>
+            </div>
+          </main>
+        );
+      })(req.raw, env, executionCtx);
+    }
+  );

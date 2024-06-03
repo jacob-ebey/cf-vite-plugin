@@ -12,7 +12,8 @@
   "dependencies": {
     "@cloudflare/kv-asset-handler": "$cloudflare__kv-asset-handler",
     "@jacob-ebey/hono-server-components": "workspace:*",
-    "hono": "$hono"
+    "hono": "$hono",
+    "workers-swr": "0.0.8"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "$cloudflare__workers-types",

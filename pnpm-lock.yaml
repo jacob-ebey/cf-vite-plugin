@@ -32,6 +32,9 @@ importers:
       hono:
         specifier: 4.4.2
         version: 4.4.2
+      workers-swr:
+        specifier: 0.0.8
+        version: 0.0.8
     devDependencies:
       '@cloudflare/workers-types':
         specifier: 4.20240529.0
@@ -1913,6 +1916,9 @@ packages:
     engines: {node: '>=16'}
     hasBin: true
 
+  workers-swr@0.0.8:
+    resolution: {integrity: sha512-PjOmIxhedRWCuD/gVXro4gmcXPslqEKWPdzR3xGxNIaZXJTxXkgSJWNOSKFc0z1qkCKNM/k413ptTCT6oakZVA==}
+
   wrangler@3.58.0:
     resolution: {integrity: sha512-h9gWER7LXLnmHABDNP1p3aqXtchlvSBN8Dp22ZurnkxaLMZ3L3H1Ze1ftiFSs0VRWv0BUnz7AWIUqZmzuBY4Nw==}
     engines: {node: '>=16.17.0'}
@@ -3576,6 +3582,10 @@ snapshots:
       '@cloudflare/workerd-linux-64': 1.20240524.0
       '@cloudflare/workerd-linux-arm64': 1.20240524.0
       '@cloudflare/workerd-windows-64': 1.20240524.0
+
+  workers-swr@0.0.8:
+    dependencies:
+      '@cloudflare/workers-types': 4.20240529.0
 
   wrangler@3.58.0(@cloudflare/workers-types@4.20240529.0):
     dependencies:
