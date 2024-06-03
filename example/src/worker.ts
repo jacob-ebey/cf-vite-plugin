@@ -5,25 +5,30 @@ import clientModules from "virtual:client-modules";
 
 import { durableObjectsMiddleware } from "./durable-objects.js";
 import type { Env } from "./env.js";
+import type { SessionVariables } from "./session.js";
+import { sessionMiddleware } from "./session.js";
 
-type HonoEnv = { Bindings: Env };
+type HonoEnv = { Bindings: Env; Variables: SessionVariables };
 
-const app = new Hono<HonoEnv>().use(durableObjectsMiddleware).use(
-  rscConsumer<HonoEnv>({
-    fetchRSC({ env: { SERVER_COMPONENTS }, req }) {
-      const stub = SERVER_COMPONENTS.get(
-        SERVER_COMPONENTS.idFromName("global")
-      );
+const app = new Hono<HonoEnv>()
+  .use(sessionMiddleware)
+  .use(durableObjectsMiddleware)
+  .use(
+    rscConsumer<HonoEnv>({
+      fetchRSC({ env: { SERVER_COMPONENTS }, get, req }) {
+        const stub = SERVER_COMPONENTS.get(
+          SERVER_COMPONENTS.idFromName(get("sessionId"))
+        );
 
-      return stub.fetch(req.raw);
-    },
-    loadClientModule: import.meta.env.PROD
-      ? (id) => {
-          return clientModules[id]();
-        }
-      : undefined,
-  })
-);
+        return stub.fetch(req.raw);
+      },
+      loadClientModule: import.meta.env.PROD
+        ? (id) => {
+            return clientModules[id]();
+          }
+        : undefined,
+    })
+  );
 
 export default {
   async fetch(request, env, ctx) {

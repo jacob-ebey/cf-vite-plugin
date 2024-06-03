@@ -9,6 +9,8 @@ import stylesEntry from "bridge:./global.css";
 import { durableObjectsMiddleware } from "./durable-objects.js";
 import type { Env } from "./env.js";
 import { Counter } from "./components/counter/client.js";
+import type { SessionVariables } from "./session.js";
+import { sessionMiddleware, setSessionId } from "./session.js";
 
 function Entry({ entry }: { entry: string }) {
   const baseId = entry.replace(/\?.*$/, "");
@@ -23,7 +25,11 @@ async function AsyncHello() {
   return <p>Hello, World!</p>;
 }
 
-export const app = new Hono<{ Bindings: Env & { state: DurableObjectState } }>()
+export const app = new Hono<{
+  Bindings: Env & { state: DurableObjectState };
+  Variables: SessionVariables;
+}>()
+  .use(sessionMiddleware)
   .use(durableObjectsMiddleware)
   .use(
     rscRenderer(({ children }) => (
@@ -48,20 +54,24 @@ export const app = new Hono<{ Bindings: Env & { state: DurableObjectState } }>()
       </html>
     ))
   )
-  .get("/", async ({ env, executionCtx, get, header, render, req }) => {
+  .on(["GET", "POST"], "/", async (c) => {
+    const { env, executionCtx, get, header, render, req } = c;
+
     return withSWR(async () => {
-      const id =
-        (
-          req.raw as {
-            cf?: IncomingRequestCfProperties;
-          }
-        ).cf?.country || "global";
+      if (req.method === "POST") {
+        const formData = await req.formData();
+        const email = String(formData.get("email") || "");
+        if (email) {
+          await setSessionId(c, email);
+        }
+      } else {
+        header("Cache-Control", "s-maxage=5, stale-while-revalidate=1");
+        header("Vary", "Cookie");
+      }
 
       const count = await get("counter")
         .value.$get()
         .then((res) => res.json());
-
-      header("Cache-Control", "public, max-age=5, stale-while-revalidate=1");
 
       return render(
         <main>
@@ -72,6 +82,10 @@ export const app = new Hono<{ Bindings: Env & { state: DurableObjectState } }>()
               <AsyncHello />
             </Suspense>
           </div>
+          <form method="POST">
+            <input name="email" type="email" placeholder="Email" required />
+            <button type="submit">Submit</button>
+          </form>
         </main>
       );
     })(req.raw, env, executionCtx);

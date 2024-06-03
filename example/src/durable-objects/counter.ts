@@ -3,14 +3,14 @@ import { Hono } from "hono";
 import { Env } from "../env.js";
 
 const app = new Hono<{ Bindings: Env & { state: DurableObjectState } }>()
-  .get("/value", async ({ env: { COUNTER_KV }, json }) => {
-    const value = (await COUNTER_KV.get<number>("value", "json")) || 0;
+  .get("/value", async ({ env: { state }, json }) => {
+    const value = (await state.storage.get<number>("value")) || 0;
     return json(value);
   })
-  .post("/increment", async ({ env: { COUNTER_KV }, json }) => {
-    const value = (await COUNTER_KV.get<number>("value", "json")) || 0;
+  .post("/increment", async ({ env: { state }, json }) => {
+    const value = (await state.storage.get<number>("value")) || 0;
     const newValue = value + 1;
-    await COUNTER_KV.put("value", newValue.toString());
+    await state.storage.put("value", newValue);
     return json(newValue);
   });
 

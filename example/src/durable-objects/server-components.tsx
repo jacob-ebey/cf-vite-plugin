@@ -15,7 +15,9 @@ export class ServerComponents implements DurableObject {
       passThroughOnException() {
         throw new Error("passThroughOnException not implemented");
       },
-      waitUntil() {},
+      waitUntil: (promise: Promise<any>) => {
+        this.#state.waitUntil(promise);
+      },
     };
     const res = await app.fetch(
       request,

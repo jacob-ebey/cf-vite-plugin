@@ -6,16 +6,19 @@ import { UnionToIntersection } from "hono/utils/types";
 
 import type { CounterAPI } from "./durable-objects/counter.js";
 import type { Env } from "./env.js";
+import type { SessionVariables } from "./session.js";
 
 export const durableObjectsMiddleware = createMiddleware<{
   Bindings: Env;
-  Variables: {
+  Variables: SessionVariables & {
     counter: DurableClient<CounterAPI>;
   };
-}>(async ({ env: { COUNTER }, set }, next) => {
+}>(async ({ env: { COUNTER }, get, set }, next) => {
   set(
     "counter",
-    createDurableClient<CounterAPI>(COUNTER.get(COUNTER.idFromName("global")))
+    createDurableClient<CounterAPI>(
+      COUNTER.get(COUNTER.idFromName(get("sessionId")))
+    )
   );
   return next();
 });

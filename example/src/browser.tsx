@@ -48,15 +48,11 @@ hydrateDocument({ signal: abortController.signal }).then(() => {
 
         toAbort.abort();
 
-        try {
-          let p;
-          startTransition(() => {
-            p = hydrateDocument({ signal }, decodedPromise).catch(() => {});
-          });
-          await p;
-        } catch (reason) {
-          console.error({ reason });
-        }
+        let p;
+        startTransition(() => {
+          p = hydrateDocument({ signal }, decodedPromise).catch(() => {});
+        });
+        await p;
       },
     });
   });
