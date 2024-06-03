@@ -7,7 +7,7 @@ import stylesEntry from "bridge:./global.css";
 
 import { durableObjectsMiddleware } from "./durable-objects.js";
 import type { Env } from "./env.js";
-// import { Counter } from "./components/counter/client.js";
+import { Counter } from "./components/counter/client.js";
 
 function Entry({ entry }: { entry: string }) {
   const baseId = entry.replace(/\?.*$/, "");
@@ -55,7 +55,7 @@ export const app = new Hono<{ Bindings: Env & { state: DurableObjectState } }>()
       <main>
         <div class="py-24 flex flex-col items-center">
           <h1 class="text-4xl font-bold">Hello, World!!</h1>
-          {/* <Counter initialCount={count} /> */}
+          <Counter initialCount={count} />
           <Suspense fallback={<p>Suspended...</p>}>
             <AsyncHello />
           </Suspense>
