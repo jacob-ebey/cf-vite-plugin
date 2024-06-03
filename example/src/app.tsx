@@ -29,6 +29,7 @@ export const app = new Hono<{ Bindings: Env & { state: DurableObjectState } }>()
       <html lang="en">
         <head>
           <meta charSet="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
           <title>Counter</title>
           <Entry entry={stylesEntry} />
         </head>

@@ -40,6 +40,7 @@ export default {
             import("@cloudflare/kv-asset-handler"),
           ]);
         const assetManifest = JSON.parse(manifestJSON);
+        const ext = url.pathname.split(".").pop();
         return await getAssetFromKV(
           {
             request,
@@ -48,12 +49,17 @@ export default {
           {
             ASSET_NAMESPACE: env.__STATIC_CONTENT,
             ASSET_MANIFEST: assetManifest,
-            cacheControl: {
-              // 1 minute
-              browserTTL: 60,
-              // 1 day
-              edgeTTL: 86400, 
-            }
+            cacheControl: [".css", ".js"].includes(ext || "")
+              ? {
+                  // 1 year
+                  browserTTL: 31536000,
+                  edgeTTL: 31536000,
+                }
+              : {
+                  // 1 minute
+                  browserTTL: 60,
+                  edgeTTL: 60,
+                },
           }
         );
       } catch (e) {}
