@@ -205,10 +205,12 @@ export async function createWorkerdDevEnvironment(
 
   const miniflare = new Miniflare({
     ...workerOptions,
-    d1Persist: options.persist,
-    kvPersist: options.persist,
-    r2Persist: options.persist,
-    cachePersist: options.persist,
+    d1Persist: options.persist ? ".wrangler/state/v3/d1" : false,
+    kvPersist: options.persist ? ".wrangler/state/v3/kv" : false,
+    r2Persist: options.persist ? ".wrangler/state/v3/r2" : false,
+    cachePersist: options.persist ? ".wrangler/state/v3/cache" : false,
+    durableObjectsPersist: options.persist ? ".wrangler/state/v3/do" : false,
+    cache: options.persist,
     workers: [
       {
         ...baseRunnerOptions,

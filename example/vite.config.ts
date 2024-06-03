@@ -121,7 +121,7 @@ export default defineConfig(({ command }) => ({
       },
       durableObjects: {
         COUNTER: {
-          environment: "prerender",
+          environment: "server",
           file: "/src/durable-objects/counter.ts",
         },
         SERVER_COMPONENTS: {
