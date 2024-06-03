@@ -1,6 +1,8 @@
 import { rscConsumer } from "@jacob-ebey/hono-server-components";
 import { Hono } from "hono";
 
+import clientModules from "virtual:client-modules";
+
 import { durableObjectsMiddleware } from "./durable-objects.js";
 import type { Env } from "./env.js";
 
@@ -15,6 +17,11 @@ const app = new Hono<HonoEnv>().use(durableObjectsMiddleware).use(
 
       return stub.fetch(req.raw);
     },
+    loadClientModule: import.meta.env.PROD
+      ? (id) => {
+          return clientModules[id]();
+        }
+      : undefined,
   })
 );
 

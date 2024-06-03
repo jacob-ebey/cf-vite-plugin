@@ -3,9 +3,13 @@ import { render } from "hono/jsx/dom";
 import { rscStream } from "rsc-html-stream/client";
 
 import { decode } from "@jacob-ebey/hono-server-components/runtime";
+import clientModules from "virtual:client-modules";
 
 const rootPromise = decode(rscStream, {
   loadClientModule(id) {
+    if (import.meta.env.PROD) {
+      return clientModules[id]();
+    }
     return import(/* @vite-ignore */ id);
   },
 }).then((decoded) => decoded);

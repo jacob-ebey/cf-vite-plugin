@@ -4,7 +4,9 @@ import { createMiddleware } from "@hattip/adapter-node/native-fetch";
 import cloudflare, {
   type WorkerdDevEnvironment,
 } from "@jacob-ebey/cf-vite-plugin";
-import serverComponents from "@jacob-ebey/hono-server-components/vite";
+import serverComponents, {
+  rscSingleton,
+} from "@jacob-ebey/hono-server-components/vite";
 import { preact } from "@preact/preset-vite";
 import type { Rollup } from "vite";
 import { defineConfig } from "vite";
@@ -28,9 +30,14 @@ global.clientBuildPromise = global.clientBuildPromise || undefined;
 export default defineConfig(({ command }) => ({
   builder: {
     async buildApp(builder) {
-      clientBuildPromise = builder.build(builder.environments.client);
-      await builder.build(builder.environments.prerender);
-      await builder.build(builder.environments.server);
+      let clientModules = rscSingleton.clientModules.size;
+      do {
+        clientModules = rscSingleton.clientModules.size;
+        clientBuildPromise = builder.build(builder.environments.client);
+        await builder.build(builder.environments.prerender);
+        await builder.build(builder.environments.server);
+        await clientBuildPromise;
+      } while (clientModules !== rscSingleton.clientModules.size);
     },
   },
   environments: {
@@ -40,7 +47,11 @@ export default defineConfig(({ command }) => ({
         manifest: true,
         outDir: "dist/browser",
         rollupOptions: {
-          input: ["/src/browser.tsx", "/src/global.css"],
+          input: [
+            "/src/browser.tsx",
+            "/src/global.css",
+            "virtual:client-modules",
+          ],
           preserveEntrySignatures: "exports-only",
         },
       },
@@ -54,7 +65,7 @@ export default defineConfig(({ command }) => ({
         assetsInlineLimit: 0,
         rollupOptions: {
           preserveEntrySignatures: "exports-only",
-          input: "/src/worker.ts",
+          input: ["/src/worker.ts", "virtual:client-modules"],
         },
       },
       resolve: {

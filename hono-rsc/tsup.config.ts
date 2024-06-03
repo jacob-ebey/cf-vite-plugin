@@ -27,7 +27,10 @@ export default [
     format: ["esm"],
     platform: "browser",
     dts: false,
-    external: ["@jacob-ebey/hono-server-components/runtime"],
+    external: [
+      "@jacob-ebey/hono-server-components/runtime",
+      "virtual:client-modules",
+    ],
   }),
   defineConfig({
     entry: ["src/vite.ts"],

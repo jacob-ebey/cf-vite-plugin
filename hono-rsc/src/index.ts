@@ -32,16 +32,18 @@ export function rscRenderer(Component?: FC<{ children: Child }>) {
   });
 }
 
+export type LoadClientModuleFunction = (
+  id: string
+) => Promise<Record<string, unknown>>;
+
 export function rscConsumer<E extends Env = {}>({
   fetchRSC,
+  loadClientModule,
 }: {
   fetchRSC: (c: Context<E>) => Promise<Response>;
+  loadClientModule?: LoadClientModuleFunction;
 }) {
-  return createMiddleware<{
-    Bindings: {
-      loadClientModule?(id: string): Promise<Record<string, unknown>>;
-    };
-  }>(async (c, next) => {
+  return createMiddleware(async (c, next) => {
     const response = await fetchRSC(c as unknown as Context<E>);
     if (!response.body) {
       throw new Error("No body in RSC response");
@@ -49,7 +51,7 @@ export function rscConsumer<E extends Env = {}>({
     const [rscStreamA, rscStreamB] = response.body.tee();
 
     const decoded = await decode(rscStreamA, {
-      loadClientModule: c.env.loadClientModule || defaultLoadClientModule,
+      loadClientModule: loadClientModule || defaultLoadClientModule,
     });
     c.executionCtx.waitUntil(decoded.done.catch(console.error));
 

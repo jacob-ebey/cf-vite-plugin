@@ -4,16 +4,29 @@ import type { Plugin } from "vite";
 import { clientTransform, serverTransform } from "unplugin-rsc";
 
 declare global {
-  var singleton: {
+  var rscSingleton: {
     clientModules: Set<string>;
     serverModules: Set<string>;
   };
 }
 
-global.singleton = global.singleton || {
+global.rscSingleton = global.rscSingleton ?? {
   clientModules: new Set(),
   serverModules: new Set(),
 };
+
+export const rscSingleton = global.rscSingleton;
+
+function virtualModule(id: string) {
+  return {
+    id,
+    resolvedId: `\0${id}`,
+    url: `/@id/__x00__${id}`,
+  };
+}
+
+const virtualClientModules = virtualModule("virtual:client-modules");
+const virtualServerModules = virtualModule("virtual:server-modules");
 
 export type ServerComponentsPluginOptions = {
   serverEnvironments: string[];
@@ -51,16 +64,40 @@ export default function serverComponentsPlugin({
         });
       }
     },
+    resolveId(id) {
+      if (id === virtualClientModules.id) {
+        return virtualClientModules.resolvedId;
+      }
+    },
+    load(id) {
+      if (!this.environment) return;
+      const hash =
+        this.environment.config.command !== "build" ? devHash : prodHash;
+
+      if (id === virtualClientModules.resolvedId) {
+        const r = `export default {
+          ${Array.from(rscSingleton.clientModules)
+            .map(
+              (mod) =>
+                `[${JSON.stringify(
+                  hash(mod, "use client")
+                )}]: () => import(${JSON.stringify(mod)}),`
+            )
+            .join("\n")}
+        };`;
+        return r;
+      }
+    },
   };
 }
 
 function prodHash(str: string, type: "use client" | "use server") {
   switch (type) {
     case "use client":
-      singleton.clientModules.add(str);
+      global.rscSingleton.clientModules.add(str);
       break;
     case "use server":
-      singleton.serverModules.add(str);
+      global.rscSingleton.serverModules.add(str);
       break;
   }
   return `/${path.relative(process.cwd(), str)}`;
@@ -69,10 +106,10 @@ function prodHash(str: string, type: "use client" | "use server") {
 function devHash(str: string, type: "use client" | "use server") {
   switch (type) {
     case "use client":
-      singleton.clientModules.add(str);
+      global.rscSingleton.clientModules.add(str);
       break;
     case "use server":
-      singleton.serverModules.add(str);
+      global.rscSingleton.serverModules.add(str);
       break;
   }
 
