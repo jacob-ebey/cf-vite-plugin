@@ -1,4 +1,4 @@
-main = "src/worker.ts"
+main = "src/worker.tsx"
 compatibility_date = "2024-05-28"
 
 [[kv_namespaces]]

@@ -3,12 +3,7 @@ import { fileURLToPath } from "node:url";
 
 import { DefaultMap, tinyassert, isNotNil } from "@hiogawa/utils";
 import type { WorkerOptions } from "miniflare";
-import {
-  mergeWorkerOptions,
-  Miniflare,
-  Response as MiniflareResponse,
-  WebSocket,
-} from "miniflare";
+import { Miniflare, Response as MiniflareResponse, WebSocket } from "miniflare";
 import { unstable_getMiniflareWorkerOptions } from "wrangler";
 import type {
   CustomPayload,
@@ -45,13 +40,6 @@ export default function cloudflareVitePlugin(
   const wranglerOptions = unstable_getMiniflareWorkerOptions(
     options.wrangler?.configPath || "wrangler.toml"
   );
-
-  const entry = wranglerOptions.main;
-  if (!entry) {
-    throw new Error(
-      `wrangler.toml does not have a main entry. Please add a main entry to wrangler.toml`
-    );
-  }
 
   const devEnvs = new Map<string, WorkerdDevEnvironment>();
 
@@ -113,6 +101,9 @@ export default function cloudflareVitePlugin(
 export type WorkerdDevApi = {
   dispatchFetch(entry: string, request: Request): Promise<Response>;
   eval: EvalApi;
+  runnerObject: ReturnType<
+    Awaited<ReturnType<Miniflare["getDurableObjectNamespace"]>>["get"]
+  >;
 };
 
 export type WorkerdDevEnvironment = DevEnvironment & {
@@ -126,13 +117,6 @@ export async function createWorkerdDevEnvironment(
   wranglerOptions: WranglerOptions,
   devEnvs: Map<string, WorkerdDevEnvironment>
 ): Promise<WorkerdDevEnvironment> {
-  const entry = wranglerOptions.main;
-  if (!entry) {
-    throw new Error(
-      `wrangler.toml does not have a main entry. Please add a main entry to wrangler.toml`
-    );
-  }
-
   const {
     bindings,
     d1Databases,
@@ -307,7 +291,9 @@ export async function createWorkerdDevEnvironment(
             headers: {
               Upgrade: "websocket",
               "x-vite-fetch": JSON.stringify({
-                entry: options.durableObjects?.[binding]?.file || entry,
+                entry:
+                  options.durableObjects?.[binding]?.file ||
+                  wranglerOptions.main,
               }),
             },
           }
@@ -360,6 +346,7 @@ export async function createWorkerdDevEnvironment(
   const devEnv = new WorkerdDevEnvironmentImpl(name, config, { hot });
 
   const api: WorkerdDevApi = {
+    runnerObject,
     async dispatchFetch(entry: string, request: Request) {
       const headers = new Headers(request.headers);
       headers.set(

@@ -5,13 +5,13 @@ export default [
     entry: ["src/durable-object-runner.ts"],
     format: ["esm"],
     platform: "browser",
-    noExternal: [/.*/],
+    external: ["cloudflare:workers"],
   }),
   defineConfig({
     entry: ["src/runner.ts"],
     format: ["esm"],
     platform: "browser",
-    noExternal: [/.*/],
+    external: ["cloudflare:workers"],
   }),
   defineConfig({
     entry: ["src/index.ts"],

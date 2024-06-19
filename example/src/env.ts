@@ -1,3 +1,5 @@
+import type { Counter } from "./durable-objects/counter.js";
+
 export type Env = {
   COOKIE_SECRET: string;
   COUNTER: DurableObjectNamespace;

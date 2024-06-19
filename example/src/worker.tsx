@@ -8,7 +8,18 @@ import type { Env } from "./env.js";
 import type { SessionVariables } from "./session.js";
 import { sessionMiddleware } from "./session.js";
 
+import browserEntry from "bridge:./browser.js";
+import stylesEntry from "bridge:./global.css";
+
 type HonoEnv = { Bindings: Env; Variables: SessionVariables };
+
+function Entry({ entry }: { entry: string }) {
+  const baseId = entry.replace(/\?.*$/, "");
+  if (import.meta.env.PROD && baseId.endsWith(".css")) {
+    return <link rel="stylesheet" href={entry} />;
+  }
+  return <script async type="module" src={entry} />;
+}
 
 const app = new Hono<HonoEnv>()
   .use(sessionMiddleware)
@@ -27,6 +38,26 @@ const app = new Hono<HonoEnv>()
             return clientModules[id]();
           }
         : undefined,
+      Layout: ({ children }) => (
+        <html lang="en">
+          <head>
+            <meta charSet="utf-8" />
+            <Entry entry={stylesEntry} />
+          </head>
+          <body>
+            <ul>
+              <li>
+                <a href="/">Home</a>
+              </li>
+              <li>
+                <a href="/about">About</a>
+              </li>
+            </ul>
+            <div id="app">{children}</div>
+            <Entry entry={browserEntry} />
+          </body>
+        </html>
+      ),
     })
   );
 

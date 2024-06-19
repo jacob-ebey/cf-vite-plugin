@@ -38,9 +38,11 @@ export type LoadClientModuleFunction = (
 
 export function rscConsumer<E extends Env = {}>({
   fetchRSC,
+  Layout,
   loadClientModule,
 }: {
   fetchRSC: (c: Context<E>) => Promise<Response>;
+  Layout?: FC<{ children: Child }>;
   loadClientModule?: LoadClientModuleFunction;
 }) {
   return createMiddleware(async (c, next) => {
@@ -68,10 +70,15 @@ export function rscConsumer<E extends Env = {}>({
     });
     c.executionCtx.waitUntil(decoded.done.catch(() => {}));
 
+    let children = decoded.value as HtmlEscapedString;
+    if (Layout) {
+      children = jsx(Layout, {}, children) as unknown as HtmlEscapedString;
+    }
+
     const body = html`${raw("<!DOCTYPE html>")}${jsx(
       RequestContext.Provider,
       { value: c },
-      decoded.value as HtmlEscapedString
+      children
     )}`;
 
     c.header("Transfer-Encoding", "chunked");

@@ -3,22 +3,11 @@ import { Hono } from "hono";
 import { Suspense } from "hono/jsx";
 import { withSWR } from "workers-swr";
 
-import browserEntry from "bridge:./browser.js";
-import stylesEntry from "bridge:./global.css";
-
 import { durableObjectsMiddleware } from "./durable-objects.js";
 import type { Env } from "./env.js";
 import { Counter } from "./components/counter/client.js";
 import type { SessionVariables } from "./session.js";
 import { sessionMiddleware, setSessionId } from "./session.js";
-
-function Entry({ entry }: { entry: string }) {
-  const baseId = entry.replace(/\?.*$/, "");
-  if (import.meta.env.PROD && baseId.endsWith(".css")) {
-    return <link rel="stylesheet" href={entry} />;
-  }
-  return <script async type="module" src={entry} />;
-}
 
 async function AsyncHello() {
   await new Promise((resolve) => setTimeout(resolve, Math.random() * 1000));
@@ -33,25 +22,17 @@ export const app = new Hono<{
   .use(durableObjectsMiddleware)
   .use(
     rscRenderer(({ children }) => (
-      <html lang="en">
-        <head>
-          <meta charSet="utf-8" />
-          <title>Counter</title>
-          <Entry entry={stylesEntry} />
-        </head>
-        <body>
-          <ul>
-            <li>
-              <a href="/">Home</a>
-            </li>
-            <li>
-              <a href="/about">About</a>
-            </li>
-          </ul>
-          {children}
-          <Entry entry={browserEntry} />
-        </body>
-      </html>
+      <>
+        <ul>
+          <li>
+            <a href="/">Home</a>
+          </li>
+          <li>
+            <a href="/about">About</a>
+          </li>
+        </ul>
+        {children}
+      </>
     ))
   )
   .on(["GET", "POST"], "/", async (c) => {

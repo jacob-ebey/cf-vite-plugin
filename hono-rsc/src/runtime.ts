@@ -12,10 +12,11 @@ function ClientAsyncComponent({
     error?: unknown;
   };
 }) {
-  if (value && typeof value.then === "function") {
-    return use(value);
-  }
-  return value;
+  return use(value);
+  // if (value && typeof value.then === "function") {
+  //   return use(value);
+  // }
+  // return value;
 }
 async function ServerAsyncComponent({ value }: { value: Promise<unknown> }) {
   const r = await value;
@@ -202,7 +203,7 @@ export function encode(
               result = Promise.reject(reason);
             }
 
-            return ["a", result];
+            return ["a", Promise.resolve(result)];
           case "string":
             return ["j", node.type, node.key, node.props];
           case "object":

@@ -29,7 +29,7 @@ export default [
     dts: false,
   }),
   defineConfig({
-    entry: ["src/browser.vite.ts"],
+    entry: ["src/browser.vite.tsx"],
     format: ["esm"],
     platform: "browser",
     dts: false,
